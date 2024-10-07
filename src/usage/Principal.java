@@ -1,6 +1,5 @@
 package usage;
 
-import adtL.BSTADT;
 import impleL.Queue;
 import impleL.PriorityQueue;
 import impleL.Set;
@@ -11,12 +10,11 @@ import adtL.QueueADT;
 import adtL.SetADT;
 import adtL.MultipleDicADT;
 import adtL.SimpleDicADT;
-import adtL.GraphADT;
 import adtL.StackADT;
 
 public class Principal {
 
-	//EXTERNAL METHODS
+	//EXTERNAL METHODS (stack, queue, priority queue, set, simple dictionary and multiple dictionary)
 
 	//precondition: origin initialized
 	public static StackADT copyStack(StackADT origin) {
@@ -100,6 +98,57 @@ public class Principal {
 		}
 		//TODO usage of values and priorities
 	} //postcondition: origin is destroyed
+	
+	public static boolean isPalindrome(StackADT original) {
+		int countElem = 0;
+		StackADT aux = new Stack();
+		aux.initialize();
+		while(!original.isEmpty()) {
+			countElem++;
+			aux.push(original.peek());
+			original.pop();
+		}
+		
+		QueueADT auxQueue = new Queue();
+		auxQueue.initialize();
+		while(!aux.isEmpty()) {
+			int num = aux.peek();
+			original.push(num);
+			auxQueue.enqueue(num);
+			aux.pop();
+		}
+
+		int comparisons = countElem/2; //integer division
+		boolean resp = true;
+		while(comparisons>0 && resp) {
+			comparisons--;
+			if (original.peek() == auxQueue.peek()) {
+				original.pop();
+				auxQueue.dequeue();
+			} else
+				resp = false;
+		}
+
+		return resp;
+	} //postcondition: original stack is destroyed (if I don't want to, I can make a copy)
+	
+	public static void showSimpleDic(SimpleDicADT sd) {
+		SetADT keys = sd.keys();
+		while (!keys.isEmpty()) {
+			int key = keys.select();
+			int value = sd.get(key);
+			System.out.println(key + ": " + value);
+			keys.remove(key);
+		}
+	}
+
+	public static void showSet(SetADT s) {
+		while (!s.isEmpty()) {
+			int elem = s.select();
+			System.out.print(elem + ".");
+			s.remove(elem);
+		}
+	} //postcondition: the set is destroyed (we could've made a copy to avoid that)
 
 	public static boolean includes(SetADT s1, SetADT s2) {
 		boolean resp = true;
@@ -114,6 +163,78 @@ public class Principal {
 			c2.remove(c2.select());*/
 		}
 		return resp;
+	}
+	
+	static SetADT copySet(SetADT s) {
+		//move everything to an auxiliary set
+		SetADT aux = new Set();
+		aux.initialize();;
+		while (!s.isEmpty()) {
+			int num = s.select();
+			aux.add(num);
+			s.remove(num);
+		}
+		//move everything from the auxiliary to the copy and the original at the same time
+		SetADT copy = new Set();
+		copy.initialize();;
+		while (!aux.isEmpty()) {
+			int num = aux.select();
+			copy.add(num);
+			s.add(num); //restore the original
+			aux.remove(num);
+		}
+		return copy;
+	}
+	
+	static QueueADT cartesianP(SetADT s1, SetADT s2) {
+		QueueADT respQueue = new Queue();
+		respQueue.initialize();
+		
+		SetADT s1Copy = copySet(s1); //I copy c1 (to not lose it)
+		
+		while (!s1Copy.isEmpty()) {
+			int numS1 = s1Copy.select();
+			SetADT s2Copy = copySet(s2); //I copy c2 (to not lose it)
+			while(!s2Copy.isEmpty()) {
+				int numS2 = s2Copy.select();
+				respQueue.enqueue(numS1);
+				respQueue.enqueue(numS2);
+				s2Copy.remove(numS2);
+			}
+			s1Copy.remove(numS1);
+		}
+		
+		return respQueue;
+	}
+	
+	//a and b are destroyed
+	public static SetADT union(SetADT a, SetADT b) {
+		SetADT resp = new Set();
+		resp.initialize();;
+		while (!a.isEmpty()) {
+			int num = a.select();
+			resp.add(num);
+			a.remove(num);
+		}
+		while (!b.isEmpty()) {
+			int num = b.select();
+			resp.add(num);
+			b.remove(num);
+		}
+		return resp;
+	}
+	
+	static SetADT intersection(SetADT s1, SetADT s2) {
+		SetADT inter = new Set();
+		inter.initialize();;
+		SetADT s1Copy = copySet(s1);
+		while (!s1Copy.isEmpty()) {
+			int elem = s1Copy.select();
+			if (s2.contains(elem))
+				inter.add(elem);
+			s1Copy.remove(elem);
+		}
+		return inter;
 	}
 
 	public static StackADT passDicToValuesStack(SimpleDicADT dic) {
@@ -166,81 +287,26 @@ public class Principal {
 		return resp;
 	}
 	
-	public static int countNodes(BSTADT tree) {
-		if (tree.isEmpty())
-			return 0; //base case
-		else
-			return 1 + countNodes(tree.leftChild()) + countNodes(tree.rightChild()); //recursive pass
-	}
-	
-	public static int countNodes2(BSTADT tree) {
-		int resp = 0;
-		if (!tree.isEmpty()) {
-			int leftCount = countNodes2(tree.leftChild());
-			int rightCount = countNodes2(tree.rightChild());
-			resp = 1 + leftCount + rightCount;
-		}
-		return resp;
-	}
-	
-	public static int countNodes3(BSTADT t) {
-		int resp = 0;
-		if (!t.isEmpty()) {
-			resp += 1;
-			if (!t.leftChild().isEmpty())
-				resp += countNodes3(t.leftChild());
-			if (!t.rightChild().isEmpty())
-				resp += countNodes3(t.rightChild());
-		} 
-		return resp;
-	}
-	
-	//preconditions: g initialized, destiny exists in the graph g
-	public static SetADT predecesores(GraphADT g, int destiny) {
-		SetADT resp = new Set();
+	//intersection of keys and intersection of values from 2 multiple dictionaries
+	static MultipleDicADT intKeysIntValues(MultipleDicADT d1, MultipleDicADT d2) {
+		MultipleDicADT resp = new MultipleDic();
 		resp.initialize();
-		SetADT vertices = g.vertices();
-		while(!vertices.isEmpty()) {
-			int origin = vertices.select();
-			if(g.existsEdge(origin, destiny))
-				resp.add(origin);
-			vertices.remove(origin);
-		}
-		return resp;
-	}
-	//postconditions: the method returns the predecessors set
-	
-	//precondition: t initialized and not empty
-	public static int height(BSTADT t) {
-		//1st step (general rule): check if it's empty -> not qualified
-		//2nd step: declaration or the response
-		int resp;
-		//3rd step: possibilities, cases (base cases/recurssives passes)
-		if(t.leftChild().isEmpty() && t.rightChild().isEmpty()) { //it's a leaf
-			resp = 0;
-		} else {
-			if (t.leftChild().isEmpty()) //RC is not empty
-				resp = height(t.rightChild()) + 1;
-			else if (t.rightChild().isEmpty()) //LC is not empty
-				resp = height(t.leftChild()) + 1;
-			else { //RC and LC are not empty
-				int leftH = height(t.leftChild());
-				int rightH = height(t.rightChild());
-				resp = leftH > rightH ? leftH + 1 : rightH + 1;
-				/*if(leftH>rightH)
-					resp=leftH+1;
-				else
-					resp=rightH+1;*/
+		SetADT d1Keys = d1.keys();
+		SetADT d2Keys = d2.keys();
+		SetADT keysInter = intersection(d1Keys, d2Keys);
+		while (!keysInter.isEmpty()) {
+			int key = keysInter.select();
+			SetADT d1Values = d1.get(key);
+			SetADT d2Values = d2.get(key);
+			SetADT valuesInter = intersection(d1Values, d2Values);
+			while (!valuesInter.isEmpty()) { //if the set of values is empty, it doesn't get in and it doesn't add anything from that key 
+				int value = valuesInter.select();
+				resp.add(key, value);
+				valuesInter.remove(value);
 			}
+			keysInter.remove(key);
 		}
 		return resp;
-	}
-	
-	public static int height2(BSTADT t) {
-		if(!t.isEmpty())
-			return Math.max(height2(t.leftChild()), height2(t.rightChild())) + 1;
-		else
-			return -1;
 	}
 	
 	public static void orderedKeys(MultipleDicADT dic) { //Polynomial cost
@@ -269,14 +335,88 @@ public class Principal {
 		//test place
 		//ADTs are declared, they are loaded with data, external methods are called
 
-		QueueADT queue1 = new Queue();
+		/*QueueADT queue1 = new Queue();
 		queue1.initialize();;
 		queue1.enqueue(25);
 		queue1.enqueue(83);
 		queue1.enqueue(0);
 		queue1.enqueue(2);
 		QueueADT copyOfQueue1 = copyQueue(queue1);
-		//we work with the copy (so the original is not lost)
+		//we work with the copy (so the original is not lost)*/
+		
+		/*StackADT stack1 = new Stack();
+		stack1.initialize();
+		stack1.push(1);
+		stack1.push(2);
+		stack1.push(3);
+		stack1.push(2);
+		stack1.push(1);
+		System.out.println(isPalindrome(stack1));*/
+		
+		/*SetADT s1 = new Set();
+		s1.initialize();
+		s1.add(1);
+		s1.add(2);
+		s1.add(3);
+		SetADT s2 = new Set();
+		s2.initialize();
+		s2.add(5);
+		s2.add(6);
+		
+		QueueADT resp1 = cartesianP(s1, s2);
+		while (!resp1.isEmpty()) {
+			System.out.println(resp1.peek());
+			resp1.dequeue();;
+		}*/
+		
+		/*MultipleDicADT d1 = new MultipleDic();
+		d1.initialize();
+		d1.add(1, -5);
+		d1.add(1, 1);
+		d1.add(1, 2);
+		d1.add(1, 3);
+		d1.add(2, 1);
+		d1.add(2, 2);
+		d1.add(2, 3);
+		d1.add(3, 2);
+		d1.add(3, 4);
+		d1.add(3, 6);
+		d1.add(4, 1);
+		d1.add(4, 4);
+		d1.add(4, 5);
+		d1.add(5, 2);
+		d1.add(5, 3);
+		d1.add(5, 5);
+		MultipleDicADT d2 = new MultipleDic();
+		d2.initialize();
+		d2.add(1, 1);
+		d2.add(1, 2);
+		d2.add(1, 3);
+		d2.add(1, 4);
+		d2.add(3, 3);
+		d2.add(3, 5);
+		d2.add(3, 7);
+		d2.add(3, 9);
+		d2.add(5, 1);
+		d2.add(5, 2);
+		d2.add(5, 3);
+		d2.add(5, 4);
+		d2.add(7, 5);
+		d2.add(7, 7);
+		d2.add(7, 9);
+		d2.add(7, 10);
+		MultipleDicADT resp2 = intKeysIntValues(d1, d2);
+		SetADT keys = resp2.keys();
+		while (!keys.isEmpty()) {
+			int key = keys.select();
+			SetADT values = resp2.get(key);
+			while (!values.isEmpty()) {
+				int value = values.select();
+				System.out.println(key + " " + value);
+				values.remove(value);
+			}
+			keys.remove(key);
+		}*/
 	}
 
 }
