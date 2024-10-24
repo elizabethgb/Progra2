@@ -286,6 +286,40 @@ public class BSTmethods {
 		}
 		return resp;
 	}
+	
+	//set of elements at odd levels
+	public static SetADT elemOddLevels(BSTADT t) {
+		return elemOddLevels(t, 0);
+	}
+	
+	public static SetADT elemOddLevels(BSTADT t, int l) {
+		SetADT odds;
+		if (t.isEmpty()) {
+			odds = new Set();
+			odds.initialize();
+		} else {
+			odds = Principal.union(elemOddLevels(t.leftChild(), l+1), elemOddLevels(t.rightChild(), l+1));
+			if (l%2!=0)
+				odds.add(t.root());
+		}
+		return odds;
+	}
+	
+	public static SetADT elemOddLevels2(BSTADT t) {
+		SetADT odds = new Set();
+		odds.initialize();
+		elemOddLevels2(t, false, odds);
+		return odds;
+	}
+	
+	public static void elemOddLevels2(BSTADT t, boolean isOdd, SetADT odds) {
+		if (!t.isEmpty()) {
+			elemOddLevels2(t.leftChild(), !isOdd, odds);
+			elemOddLevels2(t.rightChild(), !isOdd, odds);
+			if (isOdd)
+				odds.add(t.root());
+		}
+	}
 
 	public static void main(String[] args) {
 		//test place
